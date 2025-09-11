@@ -3,10 +3,10 @@ name: Build and Push Docker Image
 on:
   push:
     branches:
-      - main
+      - dev-sidy-diop
   pull_request:
     branches:
-      - main
+      - dev-sidy-diop
 
 jobs:
   docker:
