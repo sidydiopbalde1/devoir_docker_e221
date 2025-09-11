@@ -24,4 +24,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/mon-projet-docker:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/devoir_docker_e221:latest
