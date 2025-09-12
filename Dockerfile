@@ -1,14 +1,20 @@
-# Utilise une image de base
-FROM node:18-alpine
+# Utilise Node.js 18
+FROM node:18
 
-# Crée un dossier pour l'app
+# Dossier de travail
 WORKDIR /app
 
-# Copie les fichiers
+# Copie les fichiers nécessaires pour installer les dépendances
+COPY package*.json ./
+
+# Installe les dépendances
+RUN npm install --production
+
+# Copie le reste du projet
 COPY . .
 
-# Expose le port (optionnel, pour documentation)
+# Expose le port
 EXPOSE 3000
 
-# Lance un petit serveur
-CMD ["node", "-e", "console.log('Hello depuis Docker 🚀'); setTimeout(() => {}, 60000)"]
+# Commande de démarrage
+CMD ["npm", "start"]

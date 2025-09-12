@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "description": "Projet Docker pour le devoir E221 déployé sur Render",
     "main": "server.js",
+    "type": "module",
     "scripts": {
       "start": "node server.js",
       "dev": "node server.js",
