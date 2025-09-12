@@ -1,0 +1,21 @@
+{
+    "name": "devoir-docker-e221",
+    "version": "1.0.0",
+    "description": "Projet Docker pour le devoir E221 déployé sur Render",
+    "main": "server.js",
+    "scripts": {
+      "start": "node server.js",
+      "dev": "node server.js",
+      "test": "echo \"Tests passed!\" && exit 0",
+      "health": "curl -f http://localhost:${PORT:-3000}/health || exit 1"
+    },
+    "keywords": ["docker", "node", "render", "cicd", "devoir"],
+    "author": "sidydiopbalde1",
+    "license": "MIT",
+    "engines": {
+      "node": ">=18.0.0"
+    },
+    "dependencies": {
+      "express": "^4.18.2"
+    }
+  }

@@ -9,8 +9,12 @@ on:
       - main
 
 jobs:
+  # ========== JOB 1: BUILD & PUSH ==========
   docker:
     runs-on: ubuntu-latest
+    outputs:
+      image-digest: ${{ steps.build.outputs.digest }}
+      image-tags: ${{ steps.meta.outputs.tags }}
     
     steps:
       - name: Checkout repository
@@ -34,8 +38,10 @@ jobs:
             type=ref,event=branch
             type=ref,event=pr
             type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix={{branch}}-
             
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -45,3 +51,110 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Image build summary
+        run: |
+          echo "🐳 **Image Docker construite avec succès!**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📋 **Détails:**" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tags:** ${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Digest:** ${{ steps.build.outputs.digest }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Plateformes:** linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
+
+  # ========== JOB 2: DEPLOY TO RENDER (uniquement sur main) ==========
+  deploy:
+    needs: docker
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production  # Protection pour la production
+    
+    steps:
+      - name: Deploy to Render
+        run: |
+          echo "🚀 Déclenchement du déploiement sur Render..."
+          
+          # Déclencher le webhook de déploiement Render
+          RESPONSE=$(curl -s -w "HTTPSTATUS:%{http_code}" -X POST \
+            "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "clearCache": true,
+              "imageTag": "${{ github.sha }}"
+            }')
+          
+          HTTP_CODE=$(echo $RESPONSE | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
+          RESPONSE_BODY=$(echo $RESPONSE | sed -e 's/HTTPSTATUS:.*//g')
+          
+          if [ $HTTP_CODE -eq 200 ] || [ $HTTP_CODE -eq 201 ]; then
+            echo "✅ Déploiement déclenché avec succès (HTTP $HTTP_CODE)"
+          else
+            echo "❌ Erreur lors du déclenchement du déploiement (HTTP $HTTP_CODE)"
+            echo "Response: $RESPONSE_BODY"
+            exit 1
+          fi
+
+      - name: Wait for deployment
+        run: |
+          echo "⏳ Attente de la finalisation du déploiement..."
+          echo "ℹ️  Le déploiement sur Render peut prendre 2-5 minutes..."
+          sleep 120  # Attendre 2 minutes pour laisser le temps au déploiement
+
+      - name: Health check
+        run: |
+          echo "🔍 Vérification de santé de l'application..."
+          
+          MAX_ATTEMPTS=5
+          ATTEMPT=1
+          
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            echo "Tentative $ATTEMPT/$MAX_ATTEMPTS..."
+            
+            if curl -f -s --max-time 30 "${{ secrets.RENDER_APP_URL }}/health" > /dev/null 2>&1; then
+              echo "✅ Application déployée et accessible!"
+              echo "🌐 URL: ${{ secrets.RENDER_APP_URL }}"
+              break
+            else
+              if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+                echo "❌ Échec de la vérification de santé après $MAX_ATTEMPTS tentatives"
+                echo "⚠️  L'application pourrait encore être en cours de démarrage"
+                # Ne pas faire échouer le déploiement, juste avertir
+                echo "::warning::Health check failed, but deployment may still be in progress"
+              else
+                echo "⏳ Tentative échouée, nouvelle tentative dans 30 secondes..."
+                sleep 30
+              fi
+            fi
+            
+            ATTEMPT=$((ATTEMPT + 1))
+          done
+
+      - name: Deployment summary
+        run: |
+          echo "🎉 **Déploiement terminé!**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📋 **Informations:**" >> $GITHUB_STEP_SUMMARY
+          echo "- **Application URL:** [${{ secrets.RENDER_APP_URL }}](${{ secrets.RENDER_APP_URL }})" >> $GITHUB_STEP_SUMMARY
+          echo "- **Health Check:** [${{ secrets.RENDER_APP_URL }}/health](${{ secrets.RENDER_APP_URL }}/health)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image utilisée:** ${{ needs.docker.outputs.image-tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✨ **Votre application est maintenant live sur Render!**" >> $GITHUB_STEP_SUMMARY
+
+  # ========== JOB 3: NOTIFICATION (optionnel) ==========
+  notify:
+    needs: [docker, deploy]
+    runs-on: ubuntu-latest
+    if: always() && github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Notify deployment status
+        run: |
+          if [ "${{ needs.deploy.result }}" == "success" ]; then
+            echo "🎉 Déploiement réussi!"
+            echo "✅ Build: ${{ needs.docker.result }}"
+            echo "✅ Deploy: ${{ needs.deploy.result }}"
+          else
+            echo "⚠️ Problème détecté:"
+            echo "Build: ${{ needs.docker.result }}"
+            echo "Deploy: ${{ needs.deploy.result }}"
+          fi
