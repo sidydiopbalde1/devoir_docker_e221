@@ -11,6 +11,6 @@ jobs:
     steps:
       - name: Call Jenkins Job
         run: |
-         curl -X POST "http://localhost:8080/job/ci-cd-devoir-docker-e221/build?token=mytoken123"
+         curl -X POST "http://192.168.1.96:8080/job/ci-cd-devoir-docker-e221/build?token=mytoken123"
 
 
