@@ -1,0 +1,15 @@
+name: Trigger Jenkins Job
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Jenkins Job
+        run: |
+          curl -X POST "http://JENKINS_URL/job/ci-cd-devoir-docker-e221/build?token=mytoken123
+"
