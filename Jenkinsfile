@@ -5,10 +5,9 @@ pipeline {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
         RENDER_DEPLOY_HOOK_URL = credentials('render-webhook')
         RENDER_APP_URL = credentials('render-app-url')
-        SLACK_WEBHOOK = credentials('slack-webhook') // Optionnel
         EMAIL_RECIPIENTS = 'newsdb191@gmail.com' // Remplacer par votre email
         IMAGE_NAME = "${DOCKERHUB_CREDENTIALS_USR}/devoir_docker_e221"
-        SONAR_TOKEN = credentials('sonar-token') // Optionnel pour SonarQube
+      
     }
 
     triggers {
