@@ -68,7 +68,7 @@ pipeline {
                 // Checkout avec nettoyage
                 checkout([
                     $class: 'GitSCM',
-                    branches: [[name: '*/jenkins']],
+                    branches: [[name: '*/main']],
                     userRemoteConfigs: [[url: 'https://github.com/sidydiopbalde1/devoir_docker_e221']],
                     extensions: [[$class: 'CleanBeforeCheckout']]
                 ])
