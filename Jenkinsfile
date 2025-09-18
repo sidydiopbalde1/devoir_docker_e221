@@ -74,12 +74,12 @@ pipeline {
     success {
       echo "🎉 Succès: Le pipeline s'est terminé avec succès!"
       // Envoyer une notification par email en cas de succès (nécessite le plugin Email Extension)
-       mail to: "newsdb191@gmail.com", subject: "Jenkins Build Succeeded: ${env.JOB_NAME} #${env.BUILD_NUMBER}", body: "Build ${env.BUILD_NUMBER} of ${env.JOB_NAME} succeeded. Check ${env.BUILD_URL}"
+       //mail to: "newsdb191@gmail.com", subject: "Jenkins Build Succeeded: ${env.JOB_NAME} #${env.BUILD_NUMBER}", body: "Build ${env.BUILD_NUMBER} of ${env.JOB_NAME} succeeded. Check ${env.BUILD_URL}"
     }
     failure {
       echo "❌ Échec: Le pipeline a échoué."
       // Envoyer une notification par email en cas d'échec
-       mail to: "newsdb191@gmail.com", subject: "Jenkins Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}", body: "Build ${env.BUILD_NUMBER} of ${env.JOB_NAME} failed. Check ${env.BUILD_URL}"
+       //mail to: "newsdb191@gmail.com", subject: "Jenkins Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}", body: "Build ${env.BUILD_NUMBER} of ${env.JOB_NAME} failed. Check ${env.BUILD_URL}"
     }
   }
 }
