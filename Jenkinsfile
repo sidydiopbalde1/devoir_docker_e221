@@ -2,13 +2,13 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
+        DOCKERHUB = credentials('dockerhub-creds')
         RENDER_DEPLOY_HOOK_URL = credentials('render-webhook')
         RENDER_APP_URL = credentials('render-app-url')
-        EMAIL_RECIPIENTS = 'newsdb191@gmail.com' // Remplacer par votre email
-        IMAGE_NAME = "${DOCKERHUB_CREDENTIALS_USR}/devoir_docker_e221"
-      
+        EMAIL_RECIPIENTS = 'newsdb191@gmail.com'
+        IMAGE_NAME = "${DOCKERHUB_USR}/devoir_docker_e221"
     }
+
 
     triggers {
         githubPush() // Déclenchement automatique sur push GitHub
@@ -354,21 +354,22 @@ pipeline {
                             gitCommit: env.GIT_COMMIT,
                             gitBranch: env.GIT_BRANCH,
                             deploymentType: env.DEPLOYMENT_TYPE,
-                            timestamp: new Date().toISOString()
+                            timestamp: new Date().format("yyyy-MM-dd'T'HH:mm:ssXXX")
+
                         ]
                         
+                       def payloadJson = groovy.json.JsonOutput.toJson(deployPayload)
+
                         def response = sh(
                             script: """
                                 curl -s -w "HTTPSTATUS:%{http_code}" -X POST \
                                 "${RENDER_DEPLOY_HOOK_URL}" \
                                 -H "Content-Type: application/json" \
-                                -H "User-Agent: Jenkins-CI/${env.BUILD_NUMBER}" \
-                                -H "X-Deploy-Source: Jenkins" \
-                                -d '${groovy.json.JsonBuilder(deployPayload).toString()}' \
-                                --max-time 30
+                                -d '${payloadJson}'
                             """,
                             returnStdout: true
                         ).trim()
+
 
                         def parts = response.split('HTTPSTATUS:')
                         def body = parts.length > 0 ? parts[0] : ""
@@ -569,7 +570,7 @@ pipeline {
                 try {
                     sh '''
                         # Supprimer les images temporaires
-                        docker rmi $(docker images -f "dangling=true" -q) 2>/dev/null || echo "Pas d'images dangling"
+                        docker rmi $(docker images -f "dangling=true" -q) 2>/dev/null || true
                         
                         # Nettoyage système (conserve les images récentes)
                         docker system prune -f --filter "until=24h" || echo "Nettoyage Docker terminé"
