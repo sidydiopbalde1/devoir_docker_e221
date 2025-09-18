@@ -622,6 +622,7 @@
 
 
 
+
 pipeline {
   agent any
 
@@ -672,8 +673,7 @@ pipeline {
             def app = docker.build(imageTag, '.')
             echo "📤 Publication de l'image Docker: ${imageTag}"
             app.push()
-            app.addTag('latest') // Ajoute un tag 'latest' pour la dernière version réussie
-            app.push('latest')
+            app.push("latest") // Ajoute un tag 'latest' pour la dernière version réussie
           }
           echo "✅ Image Docker construite et publiée avec succès."
         }
