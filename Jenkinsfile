@@ -18,7 +18,7 @@ pipeline {
     githubPush() // Déclenchement automatique sur push GitHub
     // pollSCM("H/5 * * * *") // Optionnel: Polling toutes les 5 minutes (peut être utile pour les dépôts non-GitHub ou en cas de problème de webhook)
   }
-
+//ee
   stages {
 
     stage("Checkout") {
