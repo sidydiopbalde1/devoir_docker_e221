@@ -68,7 +68,7 @@ pipeline {
                 // Checkout avec nettoyage
                 checkout([
                     $class: 'GitSCM',
-                    branches: [[name: '*/main']],
+                    branches: [[name: '*/jenkins']],
                     userRemoteConfigs: [[url: 'https://github.com/sidydiopbalde1/devoir_docker_e221']],
                     extensions: [[$class: 'CleanBeforeCheckout']]
                 ])
@@ -337,6 +337,7 @@ pipeline {
                 anyOf {
                     branch 'main'
                     branch 'master'
+                    branch 'jenkins'
                 }
             }
             steps {
