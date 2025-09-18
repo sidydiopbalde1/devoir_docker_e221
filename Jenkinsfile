@@ -621,12 +621,13 @@
 
 
 
+
 pipeline {
   agent any
 
   options {
     timestamps()
-    ansiColor("xterm") // Ajout pour une meilleure lisibilité des logs
+
   }
 
   environment {
